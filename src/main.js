@@ -95,26 +95,29 @@ const startHomeAnimation = () => {
     homeAnimation.loopVideo.currentTime = 0;
     homeAnimation.loopVideo.play().catch(() => {});
     revealLoopAnimation(homeAnimation.homeScreen, homeAnimation.loopVideo);
-  } else {
+  } else if (!homeAnimation.hasStartedIntro) {
     hasIntroAnimationStarted = true;
     homeAnimation.hasStartedIntro = true;
     homeAnimation.introVideo.play().catch(() => {});
   }
 };
 
+const startAlbumExperience = () => {
+  document.body.classList.add('album-started');
+  showPauseState();
+  startHomeAnimation();
+};
+
 button.addEventListener('click', () => {
   if (audio.paused) {
+    startAlbumExperience();
     audio.play().catch(showPlayState);
   } else {
     audio.pause();
   }
 });
 
-audio.addEventListener('play', () => {
-  document.body.classList.add('album-started');
-  showPauseState();
-  startHomeAnimation();
-});
+audio.addEventListener('play', startAlbumExperience);
 
 audio.addEventListener('pause', showPlayState);
 audio.addEventListener('ended', showPlayState);
