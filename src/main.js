@@ -56,14 +56,14 @@ function renderHomePage() {
   app.innerHTML = `
     <main class="screen home-screen">
       <div class="logo-wrap">
-        <video class="logo-video" autoplay muted loop playsinline>
-          <source src="/animations/SuperKroger%20Retro%20Logo.mp4" type="video/mp4">
+        <video class="logo-video" muted loop playsinline>
+          <source src="/animations/SuperKrogerAnim.webm" type="video/webm">
         </video>
       </div>
 
       <div class="player">
         <button id="playPauseBtn" class="play-pause-button" aria-label="Play album">
-          <img id="playPauseIcon" src="/icons/play.jpg" alt="">
+          <img id="playPauseIcon" src="/icons/play.png" alt="">
         </button>
       </div>
 
@@ -71,11 +71,13 @@ function renderHomePage() {
         <img class="memory-card" src="/icons/memory-card.png" alt="Memory Card">
       </a>
 
-      <audio id="albumAudio" src="/audio/other/1.wav"></audio>
+      <audio id="albumAudio" src="/audio/fullalbum.mp3"></audio>
     </main>
   `;
 
   const audio = document.querySelector('#albumAudio');
+  const homeScreen = document.querySelector('.home-screen');
+  const logoVideo = document.querySelector('.logo-video');
   const button = document.querySelector('#playPauseBtn');
   const icon = document.querySelector('#playPauseIcon');
 
@@ -85,7 +87,7 @@ function renderHomePage() {
   };
 
   const showPauseState = () => {
-    icon.src = '/icons/pause.jpg';
+    icon.src = '/icons/pause.png';
     button.setAttribute('aria-label', 'Pause album');
   };
 
@@ -97,10 +99,20 @@ function renderHomePage() {
     }
   });
 
-  audio.addEventListener('play', showPauseState);
-  audio.addEventListener('pause', showPlayState);
-  audio.addEventListener('ended', showPlayState);
-  audio.addEventListener('error', showPlayState);
+  audio.addEventListener('play', () => {
+    homeScreen.classList.add('has-started');
+    showPauseState();
+    logoVideo.play().catch(() => {});
+  });
+  audio.addEventListener('pause', () => {
+    showPlayState();
+  });
+  audio.addEventListener('ended', () => {
+    showPlayState();
+  });
+  audio.addEventListener('error', () => {
+    showPlayState();
+  });
 
   const memoryCardLink = document.querySelector('.memory-card-link');
 
@@ -123,22 +135,25 @@ function renderEnterPage() {
   app.innerHTML = `
     <main class="screen password-screen">
       <div class="panel">
-        <h1>Insert Password</h1>
+        <div class="password-popup">
+          <div class="password-popup-bar">
+            <span class="password-close" role="link" tabindex="0" aria-label="Back to home">X</span>
+          </div>
 
-        <form id="passwordForm">
-          <input 
-            id="passwordInput" 
-            class="ps2-input" 
-            type="password" 
-            autocomplete="off"
-            autofocus
-          >
-          <button class="ps2-button" type="submit">Enter</button>
-        </form>
+          <form id="passwordForm">
+            <label class="password-label" for="passwordInput">Password:</label>
+            <input 
+              id="passwordInput" 
+              class="ps2-input" 
+              type="password" 
+              autocomplete="off"
+              autofocus
+            >
+            <button class="ps2-button" type="submit">OK</button>
+          </form>
+        </div>
 
         <p id="errorMessage" class="error-message"></p>
-
-        <a class="back-link" href="#/">Back</a>
       </div>
     </main>
   `;
@@ -146,6 +161,19 @@ function renderEnterPage() {
   const form = document.querySelector('#passwordForm');
   const input = document.querySelector('#passwordInput');
   const error = document.querySelector('#errorMessage');
+  const close = document.querySelector('.password-close');
+
+  const goHome = () => {
+    window.location.hash = '#/';
+  };
+
+  close.addEventListener('click', goHome);
+  close.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      goHome();
+    }
+  });
 
   form.addEventListener('submit', event => {
     event.preventDefault();
@@ -172,8 +200,8 @@ function renderVaultPage() {
     <main class="screen vault-screen">
       <div class="panel file-explorer">
         <div class="window-titlebar">
-          <span>Super Secret Files</span>
-          <span>X</span>
+          <span>Super Secret Shit</span>
+          <a class="back-link" href="#/"><span>X</span></a>
         </div>
         <div class="window-toolbar">
           <span>File</span>
@@ -191,8 +219,9 @@ function renderVaultPage() {
           </div>
         </div>
         <div class="window-statusbar">
-          <span>Ready</span>
-          <a class="back-link" href="#/">Exit</a>
+          <span>Zac Crook</span>
+          <span>Hampton Peay</span>
+          <span>Tommy Trautwein</span>
         </div>
       </div>
     </main>
