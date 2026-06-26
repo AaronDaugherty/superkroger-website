@@ -678,7 +678,7 @@ body.is-home-route.album-started .volume-control {
   }
 
   .logo-wrap {
-    top: 31%;
+    top: 50%;
     width: 100vw;
   }
 
@@ -711,8 +711,9 @@ body.is-home-route.album-started .volume-control {
   }
 
   .password-popup {
-    width: min(21rem, 94vw);
+    width: min(16.8rem, 75vw);
     padding: 0 1rem 1rem;
+    transform: translateX(-0.75rem);
   }
 
   .password-popup-bar {
