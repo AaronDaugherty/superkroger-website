@@ -24,10 +24,7 @@ body {
 }
 
 body.background-ready {
-  background:
-    radial-gradient(ellipse at 38% 42%, rgba(164, 168, 158, 0.36), transparent 45%),
-    radial-gradient(ellipse at 76% 44%, rgba(54, 56, 50, 0.28), transparent 58%),
-    linear-gradient(105deg, #7c807a 0%, #666a63 44%, #3d403a 100%);
+  background: #000;
 }
 
 body::before {
@@ -634,8 +631,13 @@ body.is-home-route.album-started .volume-control {
     top: calc(100dvh - 5.25rem);
   }
 
+  body.player-motion-ready .player {
+    transition: opacity 700ms ease;
+  }
+
   .play-pause-button img {
     width: clamp(80px, 24vw, 116px);
+    transition: none;
   }
 
   body.is-home-route:not(.album-started) .play-pause-button img {
@@ -689,9 +691,9 @@ body.is-home-route.album-started .volume-control {
   }
 
   .password-screen {
-    align-items: start;
-    padding-top: 24vh;
-    padding-bottom: 8.5rem;
+    align-items: center;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .password-popup {
@@ -767,7 +769,7 @@ body.is-home-route.album-started .volume-control {
 
 @media (max-width: 380px) {
   .password-screen {
-    padding-top: 21vh;
+    padding-top: 0.75rem;
   }
 
   .vault-screen {

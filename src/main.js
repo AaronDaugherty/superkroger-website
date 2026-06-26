@@ -45,7 +45,8 @@ const app = document.querySelector('#app');
 
 const isHomeRoute = route => route !== '#/enter' && route !== '#/vault';
 const isSafariBrowser = () => /Safari/i.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|OPiOS|Android/i.test(navigator.userAgent);
-const useSafariAnimation = isSafariBrowser();
+const isMobileBrowser = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const useSafariAnimation = isSafariBrowser() || isMobileBrowser();
 
 document.body.classList.toggle('is-home-route', isHomeRoute(window.location.hash || '#/'));
 
@@ -139,7 +140,14 @@ volumeSlider.addEventListener('input', () => {
 const loadBackgroundImage = () => new Promise(resolve => {
   const image = new Image();
 
-  image.addEventListener('load', resolve, { once: true });
+  image.decoding = 'async';
+  image.addEventListener('load', () => {
+    if (image.decode) {
+      image.decode().then(resolve).catch(resolve);
+    } else {
+      resolve();
+    }
+  }, { once: true });
   image.addEventListener('error', resolve, { once: true });
   image.src = BACKGROUND_IMAGE_URL;
 });
