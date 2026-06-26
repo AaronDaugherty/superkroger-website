@@ -7,6 +7,7 @@ import { setupCounter } from './counter.js'
 import './style.css';
 
 const PASSWORD = '12345';
+const BACKGROUND_IMAGE_URL = '/images/background-alt.jpeg';
 
 const files = [
   {
@@ -39,6 +40,10 @@ const files = [
 ];
 
 const app = document.querySelector('#app');
+
+const isHomeRoute = route => route !== '#/enter' && route !== '#/vault';
+
+document.body.classList.toggle('is-home-route', isHomeRoute(window.location.hash || '#/'));
 
 document.body.insertAdjacentHTML('beforeend', `
   <div class="player">
@@ -127,12 +132,19 @@ volumeSlider.addEventListener('input', () => {
   audio.volume = Number(volumeSlider.value);
 });
 
+const loadBackgroundImage = () => new Promise(resolve => {
+  const image = new Image();
+
+  image.addEventListener('load', resolve, { once: true });
+  image.addEventListener('error', resolve, { once: true });
+  image.src = BACKGROUND_IMAGE_URL;
+});
+
 function render() {
   const route = window.location.hash || '#/';
-  const isHomeRoute = route !== '#/enter' && route !== '#/vault';
 
   homeAnimation = null;
-  document.body.classList.toggle('is-home-route', isHomeRoute);
+  document.body.classList.toggle('is-home-route', isHomeRoute(route));
 
   if (route === '#/enter') {
     renderEnterPage();
@@ -368,4 +380,15 @@ function renderPreview(file) {
 
 window.addEventListener('hashchange', render);
 
-render();
+loadBackgroundImage().then(() => {
+  document.body.classList.add('background-ready');
+  render();
+
+  requestAnimationFrame(() => {
+    document.body.classList.add('site-loaded');
+
+    requestAnimationFrame(() => {
+      document.body.classList.add('player-motion-ready');
+    });
+  });
+});
