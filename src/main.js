@@ -40,8 +40,96 @@ const files = [
 
 const app = document.querySelector('#app');
 
+document.body.insertAdjacentHTML('beforeend', `
+  <div class="player">
+    <button id="playPauseBtn" class="play-pause-button" aria-label="Play album">
+      <img id="playPauseIcon" src="/icons/play.png" alt="">
+    </button>
+  </div>
+
+  <label class="volume-control" aria-label="Volume">
+    <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="1">
+  </label>
+
+  <audio id="albumAudio" src="/audio/fullalbum.mp3" preload="auto"></audio>
+`);
+
+const audio = document.querySelector('#albumAudio');
+const button = document.querySelector('#playPauseBtn');
+const icon = document.querySelector('#playPauseIcon');
+const volumeSlider = document.querySelector('#volumeSlider');
+let homeAnimation = null;
+let hasIntroAnimationStarted = false;
+
+audio.volume = Number(volumeSlider.value);
+
+const showPlayState = () => {
+  icon.src = '/icons/play.png';
+  button.setAttribute('aria-label', 'Play album');
+};
+
+const showPauseState = () => {
+  icon.src = '/icons/pause.png';
+  button.setAttribute('aria-label', 'Pause album');
+};
+
+const revealLoopAnimation = (homeScreen, loopVideo) => {
+  if (loopVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    homeScreen.classList.add('has-looped');
+  } else {
+    loopVideo.addEventListener('loadeddata', () => {
+      homeScreen.classList.add('has-looped');
+    }, { once: true });
+  }
+};
+
+const startHomeAnimation = () => {
+  if (!homeAnimation) return;
+
+  homeAnimation.homeScreen.classList.add('has-started');
+
+  if (homeAnimation.hasStartedLoop) {
+    homeAnimation.loopVideo.play().catch(() => {});
+  } else if (hasIntroAnimationStarted && !homeAnimation.hasStartedIntro) {
+    homeAnimation.hasStartedLoop = true;
+    homeAnimation.loopVideo.currentTime = 0;
+    homeAnimation.loopVideo.play().catch(() => {});
+    revealLoopAnimation(homeAnimation.homeScreen, homeAnimation.loopVideo);
+  } else {
+    hasIntroAnimationStarted = true;
+    homeAnimation.hasStartedIntro = true;
+    homeAnimation.introVideo.play().catch(() => {});
+  }
+};
+
+button.addEventListener('click', () => {
+  if (audio.paused) {
+    audio.play().catch(showPlayState);
+  } else {
+    audio.pause();
+  }
+});
+
+audio.addEventListener('play', () => {
+  document.body.classList.add('album-started');
+  showPauseState();
+  startHomeAnimation();
+});
+
+audio.addEventListener('pause', showPlayState);
+audio.addEventListener('ended', showPlayState);
+audio.addEventListener('error', showPlayState);
+
+volumeSlider.addEventListener('input', () => {
+  audio.volume = Number(volumeSlider.value);
+});
+
 function render() {
   const route = window.location.hash || '#/';
+  const isHomeRoute = route !== '#/enter' && route !== '#/vault';
+
+  homeAnimation = null;
+  document.body.classList.toggle('is-home-route', isHomeRoute);
 
   if (route === '#/enter') {
     renderEnterPage();
@@ -56,63 +144,44 @@ function renderHomePage() {
   app.innerHTML = `
     <main class="screen home-screen">
       <div class="logo-wrap">
-        <video class="logo-video" muted loop playsinline>
+        <video class="logo-video logo-video--intro" muted playsinline preload="auto">
           <source src="/animations/SuperKrogerAnim.webm" type="video/webm">
         </video>
-      </div>
-
-      <div class="player">
-        <button id="playPauseBtn" class="play-pause-button" aria-label="Play album">
-          <img id="playPauseIcon" src="/icons/play.png" alt="">
-        </button>
+        <video class="logo-video logo-video--loop" muted loop playsinline preload="auto">
+          <source src="/animations/LoopSuperKrogerAnim.webm" type="video/webm">
+        </video>
       </div>
 
       <a class="memory-card-link" href="#/enter">
         <img class="memory-card" src="/icons/memory-card.png" alt="Memory Card">
       </a>
-
-      <audio id="albumAudio" src="/audio/fullalbum.mp3"></audio>
     </main>
   `;
 
-  const audio = document.querySelector('#albumAudio');
   const homeScreen = document.querySelector('.home-screen');
-  const logoVideo = document.querySelector('.logo-video');
-  const button = document.querySelector('#playPauseBtn');
-  const icon = document.querySelector('#playPauseIcon');
-
-  const showPlayState = () => {
-    icon.src = '/icons/play.png';
-    button.setAttribute('aria-label', 'Play album');
+  const introVideo = document.querySelector('.logo-video--intro');
+  const loopVideo = document.querySelector('.logo-video--loop');
+  homeAnimation = {
+    homeScreen,
+    introVideo,
+    loopVideo,
+    hasStartedIntro: false,
+    hasStartedLoop: false,
   };
 
-  const showPauseState = () => {
-    icon.src = '/icons/pause.png';
-    button.setAttribute('aria-label', 'Pause album');
-  };
+  introVideo.addEventListener('ended', () => {
+    if (!homeAnimation || homeAnimation.introVideo !== introVideo || homeAnimation.hasStartedLoop) return;
 
-  button.addEventListener('click', () => {
-    if (audio.paused) {
-      audio.play().catch(showPlayState);
-    } else {
-      audio.pause();
-    }
+    homeAnimation.hasStartedLoop = true;
+    loopVideo.currentTime = 0;
+    loopVideo.play().catch(() => {});
+
+    revealLoopAnimation(homeScreen, loopVideo);
   });
 
-  audio.addEventListener('play', () => {
-    homeScreen.classList.add('has-started');
-    showPauseState();
-    logoVideo.play().catch(() => {});
-  });
-  audio.addEventListener('pause', () => {
-    showPlayState();
-  });
-  audio.addEventListener('ended', () => {
-    showPlayState();
-  });
-  audio.addEventListener('error', () => {
-    showPlayState();
-  });
+  if (document.body.classList.contains('album-started')) {
+    startHomeAnimation();
+  }
 
   const memoryCardLink = document.querySelector('.memory-card-link');
 

@@ -59,15 +59,24 @@ body::before {
 
 .player {
   position: fixed;
-  top: 50%;
+  top: calc(100% - 6rem);
   left: 50%;
-  z-index: 1;
-  transform: translate(-50%, -50%);
-  transition: top 420ms ease;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  transform: translate(-50%, -100%);
+  transition:
+    top 2400ms ease,
+    left 2400ms ease,
+    transform 2400ms ease;
 }
 
-.home-screen.has-started .player {
-  top: 75%;
+body.is-home-route:not(.album-started) .player {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .logo-wrap {
@@ -83,9 +92,25 @@ body::before {
 }
 
 .logo-video {
+  grid-area: 1 / 1;
   width: min(1040px, 82vw);
   height: min(640px, 48vw);
   object-fit: contain;
+  opacity: 0;
+  transition: opacity 1200ms ease;
+}
+
+.home-screen.has-started .logo-video--intro,
+.home-screen.has-looped .logo-video--loop {
+  opacity: 1;
+}
+
+.home-screen.has-looped .logo-video {
+  transition-duration: 220ms;
+}
+
+.home-screen.has-looped .logo-video--intro {
+  opacity: 0;
 }
 
 .panel {
@@ -106,6 +131,11 @@ body::before {
   box-shadow: none;
   backdrop-filter: none;
   text-align: center;
+}
+
+.password-screen {
+  align-items: start;
+  padding-top: calc(12vh + 12.5rem);
 }
 
 .password-screen h1 {
@@ -204,14 +234,82 @@ body::before {
 }
 
 .play-pause-button img {
-  width: 273.375px;
+  width: 136.6875px;
   height: auto;
   display: block;
-  transition: width 420ms ease;
+  transition: width 2400ms ease;
 }
 
-.home-screen.has-started .play-pause-button img {
-  width: 136.6875px;
+body.is-home-route:not(.album-started) .play-pause-button img {
+  width: 273.375px;
+}
+
+.volume-control {
+  position: fixed;
+  left: 50%;
+  bottom: 1.4rem;
+  z-index: 4;
+  display: block;
+  width: 280px;
+  padding: 0.9rem 1.2rem;
+  background: transparent;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  transition: opacity 320ms ease;
+}
+
+body.is-home-route:not(.album-started) .volume-control {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.is-home-route.album-started .volume-control {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 2400ms;
+}
+
+.volume-control input {
+  display: block;
+  width: 100%;
+  margin: 0;
+  background: transparent;
+  accent-color: #F40205;
+  appearance: none;
+  cursor: pointer;
+}
+
+.volume-control input::-webkit-slider-runnable-track {
+  height: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid #F40205;
+  background: #000;
+}
+
+.volume-control input::-webkit-slider-thumb {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: -0.375rem;
+  border: 2px solid #F40205;
+  border-radius: 50%;
+  background: #000;
+  appearance: none;
+}
+
+.volume-control input::-moz-range-track {
+  height: 0.45rem;
+  border-radius: 999px;
+  border: 1px solid #F40205;
+  background: #000;
+}
+
+.volume-control input::-moz-range-thumb {
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid #F40205;
+  border-radius: 50%;
+  background: #000;
 }
 
 .ps2-input {
@@ -279,6 +377,8 @@ body::before {
 .vault-screen {
   color: #111;
   font-family: "Courier New", monospace;
+  align-items: start;
+  padding-top: 12vh;
 }
 
 .vault-screen .file-explorer {
@@ -372,7 +472,7 @@ body::before {
 }
 
 .memory-card {
-  width: 60px;
+  width: 96px;
   height: auto;
   display: block;
   animation: memory-card-float 2.2s ease-in-out infinite;
