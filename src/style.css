@@ -48,7 +48,7 @@ body::before {
   height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 2rem;
+  padding: clamp(1rem, 4vw, 2rem);
   background: url('/images/background-alt.jpeg') center / cover no-repeat;
   overflow: hidden;
 }
@@ -59,7 +59,7 @@ body::before {
 
 .player {
   position: fixed;
-  top: calc(100% - 6rem);
+  top: calc(100dvh - 6rem);
   left: 50%;
   z-index: 4;
   display: flex;
@@ -247,10 +247,10 @@ body.is-home-route:not(.album-started) .play-pause-button img {
 .volume-control {
   position: fixed;
   left: 50%;
-  bottom: 1.4rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 4;
   display: block;
-  width: 280px;
+  width: min(280px, 72vw);
   padding: 0.9rem 1.2rem;
   background: transparent;
   opacity: 1;
@@ -427,6 +427,7 @@ body.is-home-route.album-started .volume-control {
   border: 2px solid;
   border-color: #555 #f4f4ec #f4f4ec #555;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .pane-label {
@@ -547,12 +548,6 @@ body.is-home-route.album-started .volume-control {
   color: #555;
 }
 
-@media (max-width: 640px) {
-  .window-body {
-    grid-template-columns: 1fr;
-  }
-}
-
 .error-message {
   display: inline-block;
   color: #ff9ea8;
@@ -568,4 +563,189 @@ body.is-home-route.album-started .volume-control {
   display: inline-block;
   margin-top: 1.5rem;
   color: #9efcff;
+}
+
+@media (max-width: 900px) {
+  .logo-wrap {
+    top: 32%;
+    width: min(920px, 96vw);
+  }
+
+  .logo-video {
+    width: min(920px, 96vw);
+    height: min(566px, 60vw);
+  }
+
+  .vault-screen {
+    padding-top: 7vh;
+    padding-bottom: 9.5rem;
+  }
+
+  .vault-screen .file-explorer {
+    width: min(760px, 96vw);
+  }
+}
+
+@media (max-width: 640px) {
+  body::before {
+    opacity: 0.24;
+  }
+
+  .screen {
+    padding: 0.75rem;
+  }
+
+  body.is-home-route:not(.album-started) .player {
+    top: 54%;
+  }
+
+  .player {
+    top: calc(100dvh - 5.25rem);
+  }
+
+  .play-pause-button img {
+    width: clamp(80px, 24vw, 116px);
+  }
+
+  body.is-home-route:not(.album-started) .play-pause-button img {
+    width: clamp(180px, 56vw, 250px);
+  }
+
+  .volume-control {
+    width: min(300px, 82vw);
+    padding: 0.7rem 0.8rem;
+  }
+
+  .volume-control input::-webkit-slider-runnable-track {
+    height: 0.4rem;
+  }
+
+  .volume-control input::-moz-range-track {
+    height: 0.4rem;
+  }
+
+  .volume-control input::-webkit-slider-thumb {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: -0.325rem;
+  }
+
+  .volume-control input::-moz-range-thumb {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .logo-wrap {
+    top: 31%;
+    width: 100vw;
+  }
+
+  .logo-video {
+    width: 112vw;
+    height: 70vw;
+    max-height: 42vh;
+  }
+
+  .memory-card-link {
+    top: max(0.7rem, env(safe-area-inset-top));
+    left: 0.7rem;
+  }
+
+  .memory-card {
+    width: clamp(64px, 18vw, 84px);
+  }
+
+  .password-screen {
+    align-items: start;
+    padding-top: 24vh;
+    padding-bottom: 8.5rem;
+  }
+
+  .password-popup {
+    width: min(21rem, 94vw);
+    padding: 0 1rem 1rem;
+  }
+
+  .password-popup-bar {
+    margin: 0 -1rem 0.9rem;
+  }
+
+  .password-screen form {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    gap: 0.4rem;
+  }
+
+  .password-label {
+    text-align: left;
+  }
+
+  .password-screen .ps2-input {
+    width: 100%;
+  }
+
+  .password-screen .ps2-button {
+    justify-self: center;
+  }
+
+  .error-message {
+    max-width: min(21rem, 94vw);
+  }
+
+  .vault-screen {
+    padding-top: 5vh;
+    padding-bottom: 8.5rem;
+  }
+
+  .vault-screen .file-explorer {
+    width: min(100%, 94vw);
+    max-height: calc(100dvh - 13.5rem);
+    overflow: hidden;
+  }
+
+  .window-titlebar,
+  .window-toolbar,
+  .window-statusbar {
+    font-size: 0.78rem;
+  }
+
+  .window-toolbar,
+  .window-statusbar {
+    gap: 0.55rem;
+    overflow-x: auto;
+  }
+
+  .window-body {
+    grid-template-columns: 1fr;
+    max-height: calc(100dvh - 18.5rem);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .file-pane,
+  .vault-screen .preview {
+    min-height: 9rem;
+  }
+
+  .preview img {
+    max-height: 32vh;
+  }
+}
+
+@media (max-width: 380px) {
+  .password-screen {
+    padding-top: 21vh;
+  }
+
+  .vault-screen {
+    padding-top: 3vh;
+  }
+
+  .vault-screen .file-explorer {
+    max-height: calc(100dvh - 12.5rem);
+  }
+
+  .window-body {
+    max-height: calc(100dvh - 17.5rem);
+  }
 }

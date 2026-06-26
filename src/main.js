@@ -51,7 +51,7 @@ document.body.insertAdjacentHTML('beforeend', `
     <input id="volumeSlider" type="range" min="0" max="1" step="0.01" value="1">
   </label>
 
-  <audio id="albumAudio" src="/audio/fullalbum.mp3" preload="auto"></audio>
+  <audio id="albumAudio" src="https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/superkroger-album.mp3" preload="auto"></audio>
 `);
 
 const audio = document.querySelector('#albumAudio');
