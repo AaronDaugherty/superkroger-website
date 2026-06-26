@@ -8,6 +8,7 @@ import './style.css';
 
 const PASSWORD = '12345';
 const BACKGROUND_IMAGE_URL = '/images/background-alt.jpeg';
+const SAFARI_LOOP_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Safari%20Loop_SuperKroger%20Retro%20Logo.mov';
 
 const files = [
   {
@@ -42,6 +43,8 @@ const files = [
 const app = document.querySelector('#app');
 
 const isHomeRoute = route => route !== '#/enter' && route !== '#/vault';
+const isSafariBrowser = () => /Safari/i.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|OPiOS|Android/i.test(navigator.userAgent);
+const useSafariAnimation = isSafariBrowser();
 
 document.body.classList.toggle('is-home-route', isHomeRoute(window.location.hash || '#/'));
 
@@ -92,6 +95,14 @@ const startHomeAnimation = () => {
   if (!homeAnimation) return;
 
   homeAnimation.homeScreen.classList.add('has-started');
+
+  if (homeAnimation.skipIntro && !homeAnimation.hasStartedLoop) {
+    homeAnimation.hasStartedLoop = true;
+    homeAnimation.loopVideo.currentTime = 0;
+    homeAnimation.loopVideo.play().catch(() => {});
+    revealLoopAnimation(homeAnimation.homeScreen, homeAnimation.loopVideo);
+    return;
+  }
 
   if (homeAnimation.hasStartedLoop) {
     homeAnimation.loopVideo.play().catch(() => {});
@@ -163,7 +174,10 @@ function renderHomePage() {
           <source src="/animations/SuperKrogerAnim.webm" type="video/webm">
         </video>
         <video class="logo-video logo-video--loop" muted loop playsinline preload="auto">
-          <source src="/animations/LoopSuperKrogerAnim.webm" type="video/webm">
+          ${useSafariAnimation
+            ? `<source src="${SAFARI_LOOP_ANIMATION_URL}" type="video/quicktime">`
+            : '<source src="/animations/LoopSuperKrogerAnim.webm" type="video/webm">'
+          }
         </video>
       </div>
 
@@ -180,6 +194,7 @@ function renderHomePage() {
     homeScreen,
     introVideo,
     loopVideo,
+    skipIntro: useSafariAnimation,
     hasStartedIntro: false,
     hasStartedLoop: false,
   };
@@ -284,7 +299,7 @@ function renderVaultPage() {
     <main class="screen vault-screen">
       <div class="panel file-explorer">
         <div class="window-titlebar">
-          <span>Super Secret Shit</span>
+          <span>SK File Cabinet</span>
           <a class="back-link" href="#/"><span>X</span></a>
         </div>
         <div class="window-toolbar">

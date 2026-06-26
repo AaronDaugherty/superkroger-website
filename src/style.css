@@ -16,6 +16,7 @@ html {
 }
 
 body {
+  --control-fill-color: #DBD7D8;
   margin: 0;
   font-family: system-ui, sans-serif;
   color: #dce8ff;
@@ -313,7 +314,7 @@ body.is-home-route.album-started .volume-control {
   height: 0.45rem;
   border-radius: 999px;
   border: 1px solid #F40205;
-  background: #000;
+  background: var(--control-fill-color);
 }
 
 .volume-control input::-webkit-slider-thumb {
@@ -322,7 +323,7 @@ body.is-home-route.album-started .volume-control {
   margin-top: -0.375rem;
   border: 2px solid #F40205;
   border-radius: 50%;
-  background: #000;
+  background: var(--control-fill-color);
   appearance: none;
 }
 
@@ -330,7 +331,7 @@ body.is-home-route.album-started .volume-control {
   height: 0.45rem;
   border-radius: 999px;
   border: 1px solid #F40205;
-  background: #000;
+  background: var(--control-fill-color);
 }
 
 .volume-control input::-moz-range-thumb {
@@ -338,7 +339,7 @@ body.is-home-route.album-started .volume-control {
   height: 1.2rem;
   border: 2px solid #F40205;
   border-radius: 50%;
-  background: #000;
+  background: var(--control-fill-color);
 }
 
 .ps2-input {
@@ -502,7 +503,7 @@ body.is-home-route.album-started .volume-control {
 }
 
 .memory-card {
-  width: 96px;
+  width: 192px;
   height: auto;
   display: block;
   animation: memory-card-float 2.2s ease-in-out infinite;
@@ -684,7 +685,7 @@ body.is-home-route.album-started .volume-control {
   }
 
   .memory-card {
-    width: clamp(64px, 18vw, 84px);
+    width: clamp(128px, 36vw, 168px);
   }
 
   .password-screen {
