@@ -8,6 +8,7 @@ import './style.css';
 
 const PASSWORD = '12345';
 const BACKGROUND_IMAGE_URL = '/images/background-alt.jpeg';
+const STATIC_LOGO_IMAGE_URL = '/images/staticlogo.png?v=20260626';
 const SAFARI_INTRO_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Final%20Safarifinal_SuperKroger%20Retro%20Logo.mov';
 const SAFARI_LOOP_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Safari%20Loop_SuperKroger%20Retro%20Logo.mov';
 
@@ -166,7 +167,7 @@ const applyAudioVolume = () => {
 volumeSlider.addEventListener('input', applyAudioVolume);
 volumeSlider.addEventListener('change', applyAudioVolume);
 
-const loadBackgroundImage = () => new Promise(resolve => {
+const loadImage = src => new Promise(resolve => {
   const image = new Image();
 
   image.decoding = 'async';
@@ -178,7 +179,7 @@ const loadBackgroundImage = () => new Promise(resolve => {
     }
   }, { once: true });
   image.addEventListener('error', resolve, { once: true });
-  image.src = BACKGROUND_IMAGE_URL;
+  image.src = src;
 });
 
 function render() {
@@ -200,7 +201,7 @@ function render() {
 
 function renderHomePage() {
   const logoMarkup = useStaticMobileLogo
-    ? '<img class="static-logo" src="/images/staticlogo.png" alt="Super Kroger">'
+    ? `<img class="static-logo" src="${STATIC_LOGO_IMAGE_URL}" alt="Super Kroger" decoding="async">`
     : `
         <video class="logo-video logo-video--intro" muted playsinline preload="auto">
           ${useMovAnimation
@@ -438,7 +439,10 @@ function renderPreview(file) {
 
 window.addEventListener('hashchange', render);
 
-loadBackgroundImage().then(() => {
+Promise.all([
+  loadImage(BACKGROUND_IMAGE_URL),
+  useStaticMobileLogo ? loadImage(STATIC_LOGO_IMAGE_URL) : Promise.resolve(),
+]).then(() => {
   document.body.classList.add('background-ready');
   render();
 
