@@ -8,6 +8,7 @@ import './style.css';
 
 const PASSWORD = '12345';
 const BACKGROUND_IMAGE_URL = '/images/background-alt.jpeg';
+const SAFARI_INTRO_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Final%20Safarifinal_SuperKroger%20Retro%20Logo.mov';
 const SAFARI_LOOP_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Safari%20Loop_SuperKroger%20Retro%20Logo.mov';
 
 const files = [
@@ -96,14 +97,6 @@ const startHomeAnimation = () => {
 
   homeAnimation.homeScreen.classList.add('has-started');
 
-  if (homeAnimation.skipIntro && !homeAnimation.hasStartedLoop) {
-    homeAnimation.hasStartedLoop = true;
-    homeAnimation.loopVideo.currentTime = 0;
-    homeAnimation.loopVideo.play().catch(() => {});
-    revealLoopAnimation(homeAnimation.homeScreen, homeAnimation.loopVideo);
-    return;
-  }
-
   if (homeAnimation.hasStartedLoop) {
     homeAnimation.loopVideo.play().catch(() => {});
   } else if (hasIntroAnimationStarted && !homeAnimation.hasStartedIntro) {
@@ -171,7 +164,10 @@ function renderHomePage() {
     <main class="screen home-screen">
       <div class="logo-wrap">
         <video class="logo-video logo-video--intro" muted playsinline preload="auto">
-          <source src="/animations/SuperKrogerAnim.webm" type="video/webm">
+          ${useSafariAnimation
+            ? `<source src="${SAFARI_INTRO_ANIMATION_URL}" type="video/quicktime">`
+            : '<source src="/animations/SuperKrogerAnim.webm" type="video/webm">'
+          }
         </video>
         <video class="logo-video logo-video--loop" muted loop playsinline preload="auto">
           ${useSafariAnimation
@@ -194,7 +190,6 @@ function renderHomePage() {
     homeScreen,
     introVideo,
     loopVideo,
-    skipIntro: useSafariAnimation,
     hasStartedIntro: false,
     hasStartedLoop: false,
   };
