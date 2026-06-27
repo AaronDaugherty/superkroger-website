@@ -74,6 +74,7 @@ let homeAnimation = null;
 let hasIntroAnimationStarted = false;
 let albumStartedAt = null;
 let staticLogoRevealTimer = null;
+let hasStaticLogoDropped = false;
 
 audio.volume = Number(volumeSlider.value);
 
@@ -105,9 +106,16 @@ const startHomeAnimation = () => {
   if (homeAnimation.staticLogo) {
     if (homeAnimation.hasRevealedStaticLogo) return;
 
+    if (hasStaticLogoDropped) {
+      homeAnimation.hasRevealedStaticLogo = true;
+      homeAnimation.homeScreen.classList.add('has-static-logo', 'static-logo-settled');
+      return;
+    }
+
     const revealStaticLogo = () => {
       if (!homeAnimation || !homeAnimation.staticLogo) return;
 
+      hasStaticLogoDropped = true;
       homeAnimation.hasRevealedStaticLogo = true;
       homeAnimation.homeScreen.classList.add('has-static-logo');
     };
@@ -196,6 +204,13 @@ function render() {
 }
 
 function renderHomePage() {
+  const homeScreenClasses = [
+    'screen',
+    'home-screen',
+    hasStaticLogoDropped ? 'has-static-logo' : '',
+    hasStaticLogoDropped ? 'static-logo-settled' : '',
+  ].filter(Boolean).join(' ');
+
   const logoMarkup = useStaticMobileLogo
     ? `<img class="static-logo" src="${STATIC_LOGO_IMAGE_URL}" alt="Super Kroger" decoding="async">`
     : `
@@ -214,7 +229,7 @@ function renderHomePage() {
       `;
 
   app.innerHTML = `
-    <main class="screen home-screen">
+    <main class="${homeScreenClasses}">
       <div class="logo-wrap">
         ${logoMarkup}
       </div>
@@ -234,7 +249,7 @@ function renderHomePage() {
     introVideo,
     loopVideo,
     staticLogo,
-    hasRevealedStaticLogo: false,
+    hasRevealedStaticLogo: hasStaticLogoDropped,
     hasStartedIntro: false,
     hasStartedLoop: false,
   };

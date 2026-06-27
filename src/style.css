@@ -142,6 +142,10 @@ body.album-started .player {
   animation: static-logo-drop 180ms ease-out;
 }
 
+.home-screen.static-logo-settled .static-logo {
+  animation: none;
+}
+
 .home-screen.has-looped .logo-video {
   transition-duration: 220ms;
 }
