@@ -8,6 +8,7 @@ import './style.css';
 
 const PASSWORD = '2701037N6986816W';
 const BACKGROUND_IMAGE_URL = '/images/background-alt.jpeg';
+const STATIC_LOGO_IMAGE_URL = '/images/staticlogo.png?v=20260627';
 const SAFARI_INTRO_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Final%20Safarifinal_SuperKroger%20Retro%20Logo.mov';
 const SAFARI_LOOP_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Safari%20Loop_SuperKroger%20Retro%20Logo.mov';
 
@@ -45,7 +46,9 @@ const app = document.querySelector('#app');
 
 const isHomeRoute = route => route !== '#/enter' && route !== '#/vault';
 const isSafariBrowser = () => /Safari/i.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|OPiOS|Android/i.test(navigator.userAgent);
-const useSafariAnimation = isSafariBrowser();
+const isMobileBrowser = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const useStaticMobileLogo = isMobileBrowser();
+const useSafariAnimation = isSafariBrowser() && !useStaticMobileLogo;
 
 document.body.classList.toggle('is-home-route', isHomeRoute(window.location.hash || '#/'));
 
@@ -69,6 +72,8 @@ const icon = document.querySelector('#playPauseIcon');
 const volumeSlider = document.querySelector('#volumeSlider');
 let homeAnimation = null;
 let hasIntroAnimationStarted = false;
+let albumStartedAt = null;
+let staticLogoRevealTimer = null;
 
 audio.volume = Number(volumeSlider.value);
 
@@ -97,6 +102,24 @@ const startHomeAnimation = () => {
 
   homeAnimation.homeScreen.classList.add('has-started');
 
+  if (homeAnimation.staticLogo) {
+    if (homeAnimation.hasRevealedStaticLogo) return;
+
+    const revealStaticLogo = () => {
+      if (!homeAnimation || !homeAnimation.staticLogo) return;
+
+      homeAnimation.hasRevealedStaticLogo = true;
+      homeAnimation.homeScreen.classList.add('has-static-logo');
+    };
+
+    const elapsedSinceStart = albumStartedAt ? Date.now() - albumStartedAt : 0;
+    const revealDelay = Math.max(0, 11000 - elapsedSinceStart);
+
+    clearTimeout(staticLogoRevealTimer);
+    staticLogoRevealTimer = setTimeout(revealStaticLogo, revealDelay);
+    return;
+  }
+
   if (homeAnimation.hasStartedLoop) {
     homeAnimation.loopVideo.play().catch(() => {});
   } else if (hasIntroAnimationStarted && !homeAnimation.hasStartedIntro) {
@@ -112,6 +135,10 @@ const startHomeAnimation = () => {
 };
 
 const startAlbumExperience = () => {
+  if (!albumStartedAt) {
+    albumStartedAt = Date.now();
+  }
+
   document.body.classList.add('album-started');
   showPauseState();
   startHomeAnimation();
@@ -136,17 +163,26 @@ volumeSlider.addEventListener('input', () => {
   audio.volume = Number(volumeSlider.value);
 });
 
-const loadBackgroundImage = () => new Promise(resolve => {
+const loadImage = src => new Promise(resolve => {
   const image = new Image();
 
-  image.addEventListener('load', resolve, { once: true });
+  image.decoding = 'async';
+  image.addEventListener('load', () => {
+    if (image.decode) {
+      image.decode().then(resolve).catch(resolve);
+    } else {
+      resolve();
+    }
+  }, { once: true });
   image.addEventListener('error', resolve, { once: true });
-  image.src = BACKGROUND_IMAGE_URL;
+  image.src = src;
 });
 
 function render() {
   const route = window.location.hash || '#/';
 
+  clearTimeout(staticLogoRevealTimer);
+  staticLogoRevealTimer = null;
   homeAnimation = null;
   document.body.classList.toggle('is-home-route', isHomeRoute(route));
 
@@ -160,9 +196,9 @@ function render() {
 }
 
 function renderHomePage() {
-  app.innerHTML = `
-    <main class="screen home-screen">
-      <div class="logo-wrap">
+  const logoMarkup = useStaticMobileLogo
+    ? `<img class="static-logo" src="${STATIC_LOGO_IMAGE_URL}" alt="Super Kroger" decoding="async">`
+    : `
         <video class="logo-video logo-video--intro" muted playsinline preload="auto">
           ${useSafariAnimation
             ? `<source src="${SAFARI_INTRO_ANIMATION_URL}">`
@@ -175,6 +211,12 @@ function renderHomePage() {
             : '<source src="/animations/LoopSuperKrogerAnim.webm" type="video/webm">'
           }
         </video>
+      `;
+
+  app.innerHTML = `
+    <main class="screen home-screen">
+      <div class="logo-wrap">
+        ${logoMarkup}
       </div>
 
       <a class="memory-card-link" href="#/enter">
@@ -186,15 +228,18 @@ function renderHomePage() {
   const homeScreen = document.querySelector('.home-screen');
   const introVideo = document.querySelector('.logo-video--intro');
   const loopVideo = document.querySelector('.logo-video--loop');
+  const staticLogo = document.querySelector('.static-logo');
   homeAnimation = {
     homeScreen,
     introVideo,
     loopVideo,
+    staticLogo,
+    hasRevealedStaticLogo: false,
     hasStartedIntro: false,
     hasStartedLoop: false,
   };
 
-  introVideo.addEventListener('ended', () => {
+  introVideo?.addEventListener('ended', () => {
     if (!homeAnimation || homeAnimation.introVideo !== introVideo || homeAnimation.hasStartedLoop) return;
 
     homeAnimation.hasStartedLoop = true;
@@ -390,7 +435,10 @@ function renderPreview(file) {
 
 window.addEventListener('hashchange', render);
 
-loadBackgroundImage().then(() => {
+Promise.all([
+  loadImage(BACKGROUND_IMAGE_URL),
+  useStaticMobileLogo ? loadImage(STATIC_LOGO_IMAGE_URL) : Promise.resolve(),
+]).then(() => {
   document.body.classList.add('background-ready');
   render();
 
