@@ -75,27 +75,30 @@ const startHomeAnimation = () => {
   homeAnimation.homeScreen.classList.add('has-started');
 
   if (homeAnimation.staticLogo) {
-    if (homeAnimation.hasRevealedStaticLogo) return;
+    const elapsedSinceStart = albumStartedAt ? Date.now() - albumStartedAt : 0;
+    const revealDelay = Math.max(0, 11000 - elapsedSinceStart);
+    const elapsedForAnimation = Math.min(11000, elapsedSinceStart);
 
-    if (hasStaticLogoDropped) {
-      homeAnimation.hasRevealedStaticLogo = true;
-      homeAnimation.homeScreen.classList.add('has-static-logo', 'static-logo-settled');
+    homeAnimation.homeScreen.style.setProperty('--static-logo-elapsed', `${elapsedForAnimation}ms`);
+    homeAnimation.hasRevealedStaticLogo = true;
+    homeAnimation.homeScreen.classList.add('has-static-logo');
+
+    if (hasStaticLogoDropped || elapsedSinceStart >= 11000) {
+      hasStaticLogoDropped = true;
+      homeAnimation.homeScreen.classList.add('static-logo-settled');
       return;
     }
 
-    const revealStaticLogo = () => {
+    const settleStaticLogo = () => {
       if (!homeAnimation || !homeAnimation.staticLogo) return;
 
       hasStaticLogoDropped = true;
       homeAnimation.hasRevealedStaticLogo = true;
-      homeAnimation.homeScreen.classList.add('has-static-logo');
+      homeAnimation.homeScreen.classList.add('has-static-logo', 'static-logo-settled');
     };
 
-    const elapsedSinceStart = albumStartedAt ? Date.now() - albumStartedAt : 0;
-    const revealDelay = Math.max(0, 11000 - elapsedSinceStart);
-
     clearTimeout(staticLogoRevealTimer);
-    staticLogoRevealTimer = setTimeout(revealStaticLogo, revealDelay);
+    staticLogoRevealTimer = setTimeout(settleStaticLogo, revealDelay);
     return;
   }
 

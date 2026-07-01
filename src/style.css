@@ -846,6 +846,48 @@ body.image-viewer-open {
   .static-logo {
     width: 100.8vw;
     max-width: none;
+    transform: scale(0.02);
+    transform-origin: center center;
+  }
+
+  .home-screen.has-static-logo .static-logo {
+    opacity: 1;
+    transform: scale(1);
+    animation: mobile-static-logo-approach 11000ms linear both;
+    animation-delay: calc(var(--static-logo-elapsed, 0ms) * -1);
+  }
+
+  .home-screen.static-logo-settled .static-logo {
+    animation: none;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @keyframes mobile-static-logo-approach {
+    0% {
+      opacity: 0;
+      transform: scale(0.02);
+    }
+    8% {
+      opacity: 1;
+      transform: scale(0.05);
+    }
+    45% {
+      opacity: 1;
+      transform: scale(0.14);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(0.24);
+    }
+    90% {
+      opacity: 1;
+      transform: scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
 
   .memory-card-link {
@@ -928,6 +970,24 @@ body.image-viewer-open {
 
   .preview img {
     max-height: 32vh;
+  }
+
+  .image-viewer-nav {
+    color: #f4f4ec;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    width: 3rem;
+    height: 3rem;
+    font-size: 2rem;
+  }
+
+  .image-viewer-nav:active,
+  .image-viewer-nav:disabled,
+  .image-viewer-nav:disabled:active {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
   }
 }
 
