@@ -853,7 +853,7 @@ body.image-viewer-open {
   .home-screen.has-static-logo .static-logo {
     opacity: 1;
     transform: scale(1);
-    animation: mobile-static-logo-approach 11000ms linear both;
+    animation: mobile-static-logo-approach 11500ms linear both;
     animation-delay: calc(var(--static-logo-elapsed, 0ms) * -1);
   }
 
@@ -868,21 +868,21 @@ body.image-viewer-open {
       opacity: 0;
       transform: scale(0.02);
     }
-    8% {
+    6% {
       opacity: 1;
-      transform: scale(0.05);
+      transform: scale(0.035);
     }
-    45% {
+    35% {
       opacity: 1;
-      transform: scale(0.14);
+      transform: scale(0.09);
     }
-    70% {
+    65% {
       opacity: 1;
-      transform: scale(0.24);
+      transform: scale(0.16);
     }
-    90% {
+    95.652% {
       opacity: 1;
-      transform: scale(0.5);
+      transform: scale(0.25);
     }
     100% {
       opacity: 1;

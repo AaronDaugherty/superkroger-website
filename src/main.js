@@ -7,6 +7,7 @@ const STATIC_LOGO_IMAGE_URL = '/images/staticlogo.png?v=20260627';
 const SAFARI_INTRO_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Final%20Safarifinal_SuperKroger%20Retro%20Logo.mov';
 const SAFARI_LOOP_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Safari%20Loop_SuperKroger%20Retro%20Logo.mov';
 const PLAYER_RELOCATION_MS = 1200;
+const MOBILE_LOGO_ANIMATION_MS = 11500;
 
 const app = document.querySelector('#app');
 let activeVaultRequestId = 0;
@@ -76,14 +77,14 @@ const startHomeAnimation = () => {
 
   if (homeAnimation.staticLogo) {
     const elapsedSinceStart = albumStartedAt ? Date.now() - albumStartedAt : 0;
-    const revealDelay = Math.max(0, 11000 - elapsedSinceStart);
-    const elapsedForAnimation = Math.min(11000, elapsedSinceStart);
+    const revealDelay = Math.max(0, MOBILE_LOGO_ANIMATION_MS - elapsedSinceStart);
+    const elapsedForAnimation = Math.min(MOBILE_LOGO_ANIMATION_MS, elapsedSinceStart);
 
     homeAnimation.homeScreen.style.setProperty('--static-logo-elapsed', `${elapsedForAnimation}ms`);
     homeAnimation.hasRevealedStaticLogo = true;
     homeAnimation.homeScreen.classList.add('has-static-logo');
 
-    if (hasStaticLogoDropped || elapsedSinceStart >= 11000) {
+    if (hasStaticLogoDropped || elapsedSinceStart >= MOBILE_LOGO_ANIMATION_MS) {
       hasStaticLogoDropped = true;
       homeAnimation.homeScreen.classList.add('static-logo-settled');
       return;
