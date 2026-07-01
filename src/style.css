@@ -87,17 +87,13 @@ body.site-loaded .player {
   transition: opacity 700ms ease;
 }
 
-body.player-motion-ready .player {
-  transition:
-    top 2400ms ease,
-    left 2400ms ease,
-    transform 2400ms ease,
-    opacity 700ms ease;
+body.player-relocating .player {
+  opacity: 0;
+  pointer-events: none;
 }
 
-body:not(.is-home-route) .player,
-body.album-started .player {
-  top: calc(100dvh - 6rem);
+body.player-docked .player {
+  top: calc(100dvh - 3.2rem);
   transform: translate(-50%, -100%);
 }
 
@@ -286,7 +282,7 @@ body.album-started .player {
 }
 
 .play-pause-button img {
-  width: 136.6875px;
+  width: 122px;
   height: auto;
   display: block;
   transition: width 2400ms ease;
@@ -443,12 +439,16 @@ body.is-home-route.album-started .volume-control {
 
 .vault-screen .file-explorer {
   width: min(760px, 92vw);
+  height: min(68dvh, 640px);
   padding: 0;
   border: 2px solid;
   border-color: #f4f4ec #555 #555 #f4f4ec;
   background: #c8c8c0;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
   backdrop-filter: none;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
 }
 
 .window-titlebar {
@@ -477,11 +477,12 @@ body.is-home-route.album-started .volume-control {
   grid-template-columns: minmax(220px, 0.85fr) minmax(260px, 1.15fr);
   gap: 0.5rem;
   padding: 0.5rem;
+  min-height: 0;
 }
 
 .file-pane,
 .vault-screen .preview {
-  min-height: 300px;
+  min-height: 0;
   padding: 0.6rem;
   background: #efefe6;
   border: 2px solid;
@@ -564,10 +565,36 @@ body.is-home-route.album-started .volume-control {
   padding-left: 0.75rem;
 }
 
+.file-list li {
+  margin: 0;
+}
+
+.folder-node {
+  margin-top: 0.55rem;
+}
+
+.folder-node > .file-list {
+  padding-left: 1rem;
+}
+
 .folder {
   display: block;
-  margin-top: 0.75rem;
+  margin: 0;
   color: #111;
+  cursor: pointer;
+  list-style: none;
+}
+
+.folder::-webkit-details-marker {
+  display: none;
+}
+
+.folder::before {
+  content: "▸ ";
+}
+
+.folder-node[open] > .folder::before {
+  content: "▾ ";
 }
 
 .file {
@@ -597,6 +624,26 @@ body.is-home-route.album-started .volume-control {
   display: block;
 }
 
+.preview-image-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  text-align: left;
+}
+
+.preview-image-button img {
+  margin: 0 auto;
+}
+
+.preview video,
+.preview audio {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}
+
 .preview h2 {
   margin-top: 0;
   font-size: 1rem;
@@ -606,6 +653,108 @@ body.is-home-route.album-started .volume-control {
 .empty-preview {
   margin: 0;
   color: #555;
+}
+
+.vault-message,
+.preview-copy {
+  margin: 0;
+  color: #555;
+  line-height: 1.5;
+}
+
+.preview-link {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: rgb(11, 0, 132);
+}
+
+.image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2rem);
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.image-viewer[hidden] {
+  display: none;
+}
+
+.image-viewer-content {
+  max-width: min(92vw, 1200px);
+  max-height: 88dvh;
+}
+
+.image-viewer-caption {
+  margin: 0.75rem 0 0;
+  color: #f4f4ec;
+  text-align: center;
+}
+
+.image-viewer-image {
+  max-width: 100%;
+  max-height: 88dvh;
+  display: block;
+  object-fit: contain;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
+}
+
+.image-viewer-nav,
+.image-viewer-close {
+  position: absolute;
+  padding: 0;
+  color: #111;
+  background: #c8c8c0;
+  border: 2px solid;
+  border-color: #f4f4ec #555 #555 #f4f4ec;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.image-viewer-close {
+  top: clamp(0.9rem, 2vw, 1.25rem);
+  right: clamp(0.9rem, 2vw, 1.25rem);
+  width: 2rem;
+  height: 2rem;
+}
+
+.image-viewer-nav {
+  top: 50%;
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.image-viewer-nav--prev {
+  left: clamp(0.9rem, 2vw, 1.25rem);
+}
+
+.image-viewer-nav--next {
+  right: clamp(0.9rem, 2vw, 1.25rem);
+}
+
+.image-viewer-nav:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.image-viewer-nav:disabled:active {
+  border-color: #f4f4ec #555 #555 #f4f4ec;
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.image-viewer-nav:active,
+.image-viewer-close:active {
+  border-color: #555 #f4f4ec #f4f4ec #555;
+  box-shadow: none;
+}
+
+body.image-viewer-open {
+  overflow: hidden;
 }
 
 .error-message {
@@ -643,6 +792,7 @@ body.is-home-route.album-started .volume-control {
 
   .vault-screen .file-explorer {
     width: min(760px, 96vw);
+    height: min(70dvh, 640px);
   }
 }
 
@@ -659,9 +809,8 @@ body.is-home-route.album-started .volume-control {
     top: 54%;
   }
 
-  body:not(.is-home-route) .player,
-  body.album-started .player {
-    top: calc(100dvh - 5.25rem);
+  body.player-docked .player {
+    top: calc(100dvh - 2.8rem);
   }
 
   body.player-motion-ready .player {
@@ -669,7 +818,7 @@ body.is-home-route.album-started .volume-control {
   }
 
   .play-pause-button img {
-    width: clamp(80px, 24vw, 116px);
+    width: clamp(72px, 22vw, 104px);
     transition: none;
   }
 
@@ -752,7 +901,7 @@ body.is-home-route.album-started .volume-control {
 
   .vault-screen .file-explorer {
     width: min(100%, 94vw);
-    max-height: calc(100dvh - 13.5rem);
+    height: min(72dvh, 620px);
     overflow: hidden;
   }
 
@@ -770,14 +919,11 @@ body.is-home-route.album-started .volume-control {
 
   .window-body {
     grid-template-columns: 1fr;
-    max-height: calc(100dvh - 18.5rem);
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
   }
 
   .file-pane,
   .vault-screen .preview {
-    min-height: 9rem;
+    min-height: 0;
   }
 
   .preview img {
@@ -795,10 +941,6 @@ body.is-home-route.album-started .volume-control {
   }
 
   .vault-screen .file-explorer {
-    max-height: calc(100dvh - 12.5rem);
-  }
-
-  .window-body {
-    max-height: calc(100dvh - 17.5rem);
+    height: min(74dvh, 620px);
   }
 }

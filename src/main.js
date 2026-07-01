@@ -1,48 +1,19 @@
-import './style.css'
-import javascriptLogo from './assets/javascript.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import { setupCounter } from './counter.js'
-
 import './style.css';
+import { loadVaultFiles, vaultRootLabel } from './data/vaultFiles.js';
 
 const PASSWORD = '2701037N6986816W';
 const BACKGROUND_IMAGE_URL = '/images/background-alt.jpeg';
 const STATIC_LOGO_IMAGE_URL = '/images/staticlogo.png?v=20260627';
 const SAFARI_INTRO_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Final%20Safarifinal_SuperKroger%20Retro%20Logo.mov';
 const SAFARI_LOOP_ANIMATION_URL = 'https://pub-3fd8855487a64e71be891aa188c2670c.r2.dev/Safari%20Loop_SuperKroger%20Retro%20Logo.mov';
-
-const files = [
-  {
-    name: 'photos',
-    type: 'folder',
-    children: [
-      {
-        name: 'studio-photo.jpg',
-        type: 'image',
-        src: '/images/studio-photo.jpg',
-      },
-      {
-        name: 'cover.jpg',
-        type: 'image',
-        src: '/images/cover.jpg',
-      },
-    ],
-  },
-  {
-    name: 'demos',
-    type: 'folder',
-    children: [
-      {
-        name: 'demo-01.mp3',
-        type: 'audio',
-        src: '/audio/demos/demo-01.mp3',
-      },
-    ],
-  },
-];
+const PLAYER_RELOCATION_MS = 1200;
 
 const app = document.querySelector('#app');
+let activeVaultRequestId = 0;
+let vaultImageFiles = [];
+let currentViewerImageIndex = -1;
+let playerDockedState = null;
+let playerRelocationTimer = null;
 
 const isHomeRoute = route => route !== '#/enter' && route !== '#/vault';
 const isSafariBrowser = () => /Safari/i.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|FxiOS|Edg|OPR|OPiOS|Android/i.test(navigator.userAgent);
@@ -148,6 +119,7 @@ const startAlbumExperience = () => {
   }
 
   document.body.classList.add('album-started');
+  syncPlayerRelocation();
   showPauseState();
   startHomeAnimation();
 };
@@ -162,6 +134,7 @@ button.addEventListener('click', () => {
 });
 
 audio.addEventListener('play', startAlbumExperience);
+audio.addEventListener('play', pauseVaultPreviewAudio);
 
 audio.addEventListener('pause', showPlayState);
 audio.addEventListener('ended', showPlayState);
@@ -192,7 +165,10 @@ function render() {
   clearTimeout(staticLogoRevealTimer);
   staticLogoRevealTimer = null;
   homeAnimation = null;
+  activeVaultRequestId += 1;
+  closeImageViewer();
   document.body.classList.toggle('is-home-route', isHomeRoute(route));
+  syncPlayerRelocation(route);
 
   if (route === '#/enter') {
     renderEnterPage();
@@ -285,6 +261,41 @@ function renderHomePage() {
   });
 }
 
+function isPlayerDocked(route = window.location.hash || '#/') {
+  return !isHomeRoute(route) || document.body.classList.contains('album-started');
+}
+
+function syncPlayerRelocation(route = window.location.hash || '#/') {
+  const nextPlayerDockedState = isPlayerDocked(route);
+  const shouldDockImmediately = !isHomeRoute(route);
+
+  if (playerDockedState == null) {
+    playerDockedState = nextPlayerDockedState;
+    document.body.classList.toggle('player-docked', playerDockedState);
+    return;
+  }
+
+  if (nextPlayerDockedState === playerDockedState) return;
+
+  if (shouldDockImmediately) {
+    clearTimeout(playerRelocationTimer);
+    playerRelocationTimer = null;
+    playerDockedState = nextPlayerDockedState;
+    document.body.classList.toggle('player-docked', playerDockedState);
+    document.body.classList.remove('player-relocating');
+    return;
+  }
+
+  document.body.classList.add('player-relocating');
+  clearTimeout(playerRelocationTimer);
+  playerRelocationTimer = setTimeout(() => {
+    playerDockedState = nextPlayerDockedState;
+    document.body.classList.toggle('player-docked', playerDockedState);
+    document.body.classList.remove('player-relocating');
+    playerRelocationTimer = null;
+  }, PLAYER_RELOCATION_MS);
+}
+
 function renderEnterPage() {
   app.innerHTML = `
     <main class="screen password-screen">
@@ -365,33 +376,74 @@ function renderVaultPage() {
         </div>
         <div class="window-body">
           <div class="file-pane">
-            <div class="pane-label">C:\\MEMORY_CARD</div>
-            <div id="fileTree"></div>
+            <div class="pane-label">${vaultRootLabel}</div>
+            <div id="fileTree">
+              <p class="vault-message">Loading file cabinet...</p>
+            </div>
           </div>
           <div id="preview" class="preview">
             <p class="empty-preview">Select a file to preview.</p>
           </div>
         </div>
         <div class="window-statusbar">
-          <span>Zac Crook</span>
-          <span>Hampton Peay</span>
-          <span>Tommy Trautwein</span>
+          <span>zac crook</span>
+          <span>tommy trautwein</span>
+          <span>hampton peay</span>
+        </div>
+      </div>
+      <div id="imageViewer" class="image-viewer" hidden>
+        <button id="imageViewerPrev" class="image-viewer-nav image-viewer-nav--prev" type="button" aria-label="Previous image">‹</button>
+        <button id="imageViewerNext" class="image-viewer-nav image-viewer-nav--next" type="button" aria-label="Next image">›</button>
+        <button id="imageViewerClose" class="image-viewer-close" type="button" aria-label="Close image viewer">X</button>
+        <div class="image-viewer-content">
+          <img id="imageViewerImage" class="image-viewer-image" alt="">
+          <p id="imageViewerCaption" class="image-viewer-caption"></p>
         </div>
       </div>
     </main>
   `;
 
+  const requestId = activeVaultRequestId;
   const fileTree = document.querySelector('#fileTree');
-  fileTree.innerHTML = renderFileList(files);
+  const imageViewer = document.querySelector('#imageViewer');
+  const imageViewerImage = document.querySelector('#imageViewerImage');
+  const imageViewerClose = document.querySelector('#imageViewerClose');
+  const imageViewerPrev = document.querySelector('#imageViewerPrev');
+  const imageViewerNext = document.querySelector('#imageViewerNext');
 
-  document.querySelectorAll('[data-file-src]').forEach(item => {
-    item.addEventListener('click', () => {
-      const src = item.dataset.fileSrc;
-      const type = item.dataset.fileType;
-      const name = item.dataset.fileName;
-      renderPreview({ src, type, name });
-    });
+  imageViewerClose.addEventListener('click', closeImageViewer);
+  imageViewerPrev.addEventListener('click', showAdjacentViewerImage.bind(null, -1));
+  imageViewerNext.addEventListener('click', showAdjacentViewerImage.bind(null, 1));
+  imageViewer.addEventListener('click', event => {
+    if (event.target === imageViewer) {
+      closeImageViewer();
+    }
   });
+
+  imageViewerImage.addEventListener('click', event => {
+    event.stopPropagation();
+  });
+
+  loadVaultFiles()
+    .then(files => {
+      if (requestId !== activeVaultRequestId || window.location.hash !== '#/vault') return;
+
+      vaultImageFiles = flattenFilesByType(files, 'image');
+      fileTree.innerHTML = files.length
+        ? renderFileList(files)
+        : '<p class="vault-message">No files found in this folder.</p>';
+
+      bindFilePreviewButtons();
+    })
+    .catch(() => {
+      if (requestId !== activeVaultRequestId || window.location.hash !== '#/vault') return;
+
+      fileTree.innerHTML = `
+        <p class="vault-message">
+          Unable to load the vault manifest. Add file-cabinet/manifest.json to R2 or update /vault-manifest.json.
+        </p>
+      `;
+    });
 }
 
 function renderFileList(items) {
@@ -401,8 +453,10 @@ function renderFileList(items) {
         if (item.type === 'folder') {
           return `
             <li>
-              <span class="folder">▸ ${item.name}/</span>
-              ${renderFileList(item.children)}
+              <details class="folder-node">
+                <summary class="folder">${item.name}/</summary>
+                ${renderFileList(item.children)}
+              </details>
             </li>
           `;
         }
@@ -427,7 +481,19 @@ function renderFileList(items) {
 function getFileIcon(type) {
   if (type === 'audio') return '♫';
   if (type === 'image') return '▣';
+  if (type === 'video') return '▶';
   return '◇';
+}
+
+function bindFilePreviewButtons() {
+  document.querySelectorAll('[data-file-src]').forEach(item => {
+    item.addEventListener('click', () => {
+      const src = item.dataset.fileSrc;
+      const type = item.dataset.fileType;
+      const name = item.dataset.fileName;
+      renderPreview({ src, type, name });
+    });
+  });
 }
 
 function renderPreview(file) {
@@ -436,8 +502,14 @@ function renderPreview(file) {
   if (file.type === 'image') {
     preview.innerHTML = `
       <h2>${file.name}</h2>
-      <img src="${file.src}" alt="${file.name}">
+      <button class="preview-image-button" type="button" aria-label="Open ${file.name} larger view">
+        <img src="${file.src}" alt="${file.name}" data-preview-image="true">
+      </button>
     `;
+    preview.querySelector('.preview-image-button')?.addEventListener('click', () => {
+      openImageViewer(file);
+    });
+    return;
   }
 
   if (file.type === 'audio') {
@@ -445,7 +517,118 @@ function renderPreview(file) {
       <h2>${file.name}</h2>
       <audio src="${file.src}" controls></audio>
     `;
+    bindVaultPreviewAudioSync(preview.querySelector('audio'));
+    return;
   }
+
+  if (file.type === 'video') {
+    preview.innerHTML = `
+      <h2>${file.name}</h2>
+      <video src="${file.src}" controls playsinline></video>
+    `;
+    return;
+  }
+
+  preview.innerHTML = `
+    <h2>${file.name}</h2>
+    <a class="preview-link" href="${file.src}" target="_blank" rel="noreferrer">Open file</a>
+  `;
+}
+
+function bindVaultPreviewAudioSync(previewAudio) {
+  if (!previewAudio) return;
+
+  previewAudio.addEventListener('play', () => {
+    if (!audio.paused) {
+      audio.pause();
+    }
+  });
+}
+
+function pauseVaultPreviewAudio() {
+  const previewAudio = document.querySelector('#preview audio');
+
+  if (previewAudio && !previewAudio.paused) {
+    previewAudio.pause();
+  }
+}
+
+function openImageViewer(file) {
+  const imageViewer = document.querySelector('#imageViewer');
+  const imageViewerImage = document.querySelector('#imageViewerImage');
+
+  if (!imageViewer || !imageViewerImage) return;
+
+  currentViewerImageIndex = vaultImageFiles.findIndex(item => item.src === file.src);
+  renderViewerImage(currentViewerImageIndex >= 0 ? vaultImageFiles[currentViewerImageIndex] : file);
+  imageViewer.hidden = false;
+  document.body.classList.add('image-viewer-open');
+}
+
+function closeImageViewer() {
+  const imageViewer = document.querySelector('#imageViewer');
+  const imageViewerImage = document.querySelector('#imageViewerImage');
+  const imageViewerCaption = document.querySelector('#imageViewerCaption');
+
+  if (!imageViewer || !imageViewerImage || !imageViewerCaption) return;
+
+  imageViewer.hidden = true;
+  imageViewerImage.removeAttribute('src');
+  imageViewerImage.alt = '';
+  imageViewerCaption.textContent = '';
+  currentViewerImageIndex = -1;
+  document.body.classList.remove('image-viewer-open');
+}
+
+window.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    closeImageViewer();
+    return;
+  }
+
+  if (!document.body.classList.contains('image-viewer-open')) return;
+
+  if (event.key === 'ArrowLeft') {
+    showAdjacentViewerImage(-1);
+  }
+
+  if (event.key === 'ArrowRight') {
+    showAdjacentViewerImage(1);
+  }
+});
+
+function flattenFilesByType(items, type) {
+  return items.flatMap(item => {
+    if (item.type === 'folder') {
+      return flattenFilesByType(item.children, type);
+    }
+
+    return item.type === type ? [item] : [];
+  });
+}
+
+function renderViewerImage(file) {
+  const imageViewerImage = document.querySelector('#imageViewerImage');
+  const imageViewerCaption = document.querySelector('#imageViewerCaption');
+  const imageViewerPrev = document.querySelector('#imageViewerPrev');
+  const imageViewerNext = document.querySelector('#imageViewerNext');
+
+  if (!imageViewerImage || !imageViewerCaption || !imageViewerPrev || !imageViewerNext) return;
+
+  imageViewerImage.src = file.src;
+  imageViewerImage.alt = file.name;
+  imageViewerCaption.textContent = file.name;
+
+  const hasMultipleImages = vaultImageFiles.length > 1;
+  imageViewerPrev.disabled = !hasMultipleImages;
+  imageViewerNext.disabled = !hasMultipleImages;
+}
+
+function showAdjacentViewerImage(direction) {
+  if (vaultImageFiles.length < 2 || currentViewerImageIndex < 0) return;
+
+  currentViewerImageIndex = (currentViewerImageIndex + direction + vaultImageFiles.length) % vaultImageFiles.length;
+  renderViewerImage(vaultImageFiles[currentViewerImageIndex]);
 }
 
 window.addEventListener('hashchange', render);
